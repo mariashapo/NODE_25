@@ -32,20 +32,21 @@ def choose_device(pref: str) -> str:
     if pref == "mps" or (pref == "auto" and getattr(torch.backends, "mps", None) and torch.backends.mps.is_available()): return "mps"
     return "cpu"
 
+
 def main():
     p = argparse.ArgumentParser("node25-train", description="Synthetic Neural ODE runner (PyTorch)")
-    p.add_argument("--system", choices=["ho","vdp","do"], default="ho")
-    p.add_argument("--seeds", type=int, default=10)
+    p.add_argument("--system", choices=["ho","vdp","do"], default="vdp")
+    p.add_argument("--seeds", type=int, default=1)
     p.add_argument("--epochs", type=int, default=800)
     p.add_argument("--noise", type=float, default=0.1)
     p.add_argument("--widths", type=str, default="32,32")
-    p.add_argument("--reg", type=float, default=0.0)
+    p.add_argument("--reg", type=float, default=0.001)
     p.add_argument("--lr", type=float, default=1e-3)
     p.add_argument("--rtol", type=float, default=1e-3)
     p.add_argument("--atol", type=float, default=1e-4)
     p.add_argument("--method", type=str, default="dopri5")
     p.add_argument("--time-invariant", action="store_true")
-    p.add_argument("--device", choices=["auto","cpu","cuda","mps"], default="auto")
+    p.add_argument("--device", choices=["auto","cpu","cuda","mps"], default="cpu")
     p.add_argument("--outdir", type=str, default="results/cs1")
     p.add_argument("--resample-data", action="store_true")
     p.add_argument("--save-preds", action="store_true")
@@ -54,7 +55,7 @@ def main():
     device = choose_device(args.device)
     widths = parse_widths(args.widths)
 
-    base_cfg = SynthConfig(system=args.system, N=200, t0=0.0, t1=10.0, y0=(0.0,1.0), noise=args.noise)
+    base_cfg = SynthConfig(system=args.system, N=200, t0=0.0, t1=15.0, y0=(0.0,1.0), noise=args.noise)
     t_np, y_true_np, y_noisy_np, _ = generate_synth(base_cfg)
     t, y_true, y_noisy = to_torch(t_np, y_true_np, y_noisy_np, device=device)
     y0 = y_true[0]
@@ -74,6 +75,7 @@ def main():
                           rtol=args.rtol, atol=args.atol, method=args.method)
         out = train_one_seed(t, y_noisy, y0, cfg, device=device)
         mses.append(float(out["mse"]))
+        print(f"Seed {seed} completed with MSE {float(out['mse'])}")
 
         if args.save_preds and first_seed_pred is None:
             with torch.no_grad():
@@ -110,6 +112,7 @@ def main():
     print(f"\n✅ {args.system} | widths={widths} | reg={args.reg} | seeds={args.seeds}")
     print(f"   MSE: {mean_mse:.4e} ± {ci95:.4e} (95% CI)")
     print(f"   Saved: {save_dir}/metrics.json and {Path(args.outdir)/'summary.csv'}")
+
 
 if __name__ == "__main__":
     main()

@@ -79,7 +79,10 @@ optim = [
 ]
 
 [project.scripts]
-node25-train = "node_25.cli.train:main"   
+node25-train = "node_25.cli.train:main"
+node25-viz-data = "node_25.cli.viz_data:main"
+node25-viz-preds = "node_25.cli.viz_pred:main"
+
 
 [tool.setuptools]
 package-dir = {"" = "src"}
@@ -103,3 +106,4 @@ testpaths = ["tests"]
 [tool.mypy]
 python_version = "3.10"
 ignore_missing_imports = true
+
