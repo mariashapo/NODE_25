@@ -32,6 +32,19 @@ def choose_device(pref: str) -> str:
     if pref == "mps" or (pref == "auto" and getattr(torch.backends, "mps", None) and torch.backends.mps.is_available()): return "mps"
     return "cpu"
 
+def parse_widths(s: str):
+    s = s.strip()
+    return tuple(int(x) for x in s.split(",") if x) if s else ()
+
+def parse_floats_list(s: str):
+    s = s.strip()
+    return tuple(float(x) for x in s.split(",") if x) if s else ()
+
+def parse_ints_list(s: str):
+    s = s.strip()
+    return tuple(int(x) for x in s.split(",") if x) if s else ()
+
+
 
 def main():
     p = argparse.ArgumentParser("node25-train", description="Synthetic Neural ODE runner (PyTorch)")
@@ -50,10 +63,19 @@ def main():
     p.add_argument("--outdir", type=str, default="results/cs1")
     p.add_argument("--resample-data", action="store_true")
     p.add_argument("--save-preds", action="store_true")
+    p.add_argument("--pretrain-fracs", type=str, default="",
+                help="Comma-separated fractions of time grid to pretrain on, e.g. '0.1,0.2'.")
+    p.add_argument("--pretrain-epochs", type=str, default="",
+                help="Comma-separated epochs per pretrain stage, e.g. '100,200'. "
+                        "If omitted, each stage uses floor(epochs/num_stages).")
+
     args = p.parse_args()
 
     device = choose_device(args.device)
     widths = parse_widths(args.widths)
+    widths = parse_widths(args.widths)
+    pt_fracs = parse_floats_list(args.pretrain_fracs)
+    pt_epochs = parse_ints_list(args.pretrain_epochs)
 
     base_cfg = SynthConfig(system=args.system, N=200, t0=0.0, t1=15.0, y0=(0.0,1.0), noise=args.noise)
     t_np, y_true_np, y_noisy_np, _ = generate_synth(base_cfg)
@@ -70,9 +92,19 @@ def main():
             t, y_true, y_noisy = to_torch(t_np, y_true_np, y_noisy_np, device=device)
             y0 = y_true[0]
 
-        cfg = TrainConfig(lr=args.lr, epochs=args.epochs, widths=widths,
-                          time_invariant=args.time_invariant, reg_lambda=args.reg,
-                          rtol=args.rtol, atol=args.atol, method=args.method)
+        cfg = TrainConfig(
+            lr=args.lr,
+            epochs=args.epochs,
+            widths=widths,
+            time_invariant=args.time_invariant,
+            reg_lambda=args.reg,
+            rtol=args.rtol,
+            atol=args.atol,
+            method=args.method,
+            pretrain_fracs=pt_fracs,
+            pretrain_epochs=pt_epochs,
+        )
+
         out = train_one_seed(t, y_noisy, y0, cfg, device=device)
         mses.append(float(out["mse"]))
         print(f"Seed {seed} completed with MSE {float(out['mse'])}")
