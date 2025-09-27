@@ -1,0 +1,54 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+      {
+        "name": "NODE25: PyTorch train (debug)",
+        "type": "python",
+        "request": "launch",
+        "module": "node_25.cli.train_pytorch",
+        "console": "integratedTerminal",
+        "justMyCode": false,
+        "cwd": "${workspaceFolder}",
+        "args": [
+          "--device", "cpu",
+          "--system", "vdp",
+          "--seeds", "3",
+          "--epochs", "200",
+          "--widths", "32",
+          "--noise", "0.1",
+          "--save-preds",
+          "--save-plots"
+        ],
+        "env": {
+          // Only needed if you didn't `pip install -e .`
+          "PYTHONPATH": "${workspaceFolder}/src"
+        }
+      },
+      {
+        "name": "NODE25: Pyomo train (debug)",
+        "type": "python",
+        "request": "launch",
+        "module": "node_25.cli.train_pyomo",
+        "console": "integratedTerminal",
+        "justMyCode": false,
+        "cwd": "${workspaceFolder}",
+        "args": [
+          "--system", "ho",
+          "--N", "150",
+          "--t0", "0",
+          "--t1", "10",
+          "--widths", "32",
+          "--noise", "0.1",
+          "--reg", "1e-6",
+          "--solver", "ipopt",
+          "--max-iter", "3000",
+          "--save-plots",
+          "--plot-colloc"
+        ],
+        "env": {
+          "PYTHONPATH": "${workspaceFolder}/src"
+        }
+      },
+    ]
+  }
+  

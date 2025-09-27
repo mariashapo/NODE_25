@@ -44,14 +44,13 @@ node25-viz-preds --npz 'results/cs1/vdp/pytorch_w(32,)_reg0.001/predictions_seed
 
 # ----------------------------------------------------------------- PYOMO ---------------------------------------------------------------  
 
-node25-train-pyomo --system ho --N 150 --t0 0 --t1 10 --widths 32 \
-  --noise 0.1 --reg 1e-6 --solver ipopt --max-iter 3000
+node25-train-pyomo --system ho --N 150 --t0 0 --t1 10 --widths 32 --noise 0.1 --reg 1e-6 --solver ipopt --max-iter 3000
 python -m pip install -e .
-node25-train-pyomo --system vdp --N 150 --t0 0 --t1 10 --widths 32 \
-  --noise 0.1 --reg 1e-6 --solver ipopt --max-iter 3000
+node25-train-pyomo --system vdp --N 150 --t0 0 --t1 10 --widths 32 --noise 0.1 --reg 1e-6 --solver ipopt --max-iter 3000
 
 # saving results
 node25-viz-preds --npz 'results/cs1/ho/pyomo_w(32,)_reg1e-06/predictions_train_uniform.npz' --out results/viz/ho_pyomo_training.png 
+node25-viz-preds --npz 'results/cs1/vdp/pyomo_w(32,)_reg1e-06/predictions_train_uniform.npz' --out results/viz/vdp_pyomo_training.png 
 node25-viz-preds --npz 'results/cs1/vdp/pyomo_w(32,)_reg1e-06/predictions_train_uniform.npz' --out results/viz/vdp_pyomo_training.png 
 
 
